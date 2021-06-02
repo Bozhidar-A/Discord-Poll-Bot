@@ -12,25 +12,27 @@ client.login(process.env.BOT_TOKEN);
 var guildID = 0;
 //res 785419755896307763
 
-const helpEmbed = new Discord.MessageEmbed()
-  .setTitle("Syntax:")
-  .setDescription(
-    "All arguments are prefixed with '-'. Example: !poll - {poll-duration-in-seconds} - {poll-question} - {first-poll-option}... - {last-poll-option}"
-  );
+// const helpEmbed = new Discord.MessageEmbed()
+//   .setTitle("Syntax:")
+//   .setDescription(
+//     "All arguments are prefixed with '-'. Example: !poll - {poll-duration-in-seconds} - {poll-question} - {first-poll-option}... - {last-poll-option}"
+//   );
+const helpText =
+  "**Syntax:**\nAll arguments are prefixed with '&$&'.\n**Example:**\n!poll &$& {poll-duration-in-seconds} &$& {poll-question} &$& {first-poll-option}... &$& {last-poll-option}\n**Example:**\nHow was your day?\n1. Good\n2. Bad\n";
 
 client.on("message", (msg) => {
   try {
-    let split = msg.content.split("-").map(function (item) {
+    let split = msg.content.split("&$&").map(function (item) {
       return item.trim();
     }); //this is bad
+
     if (split[0] !== "!poll") {
       return;
-    }
-    if (split[1] === "help") {
-      msg.channel.send(helpEmbed);
+    } else if (split[1] === "help" || msg === "!poll help") {
+      msg.channel.send(helpText);
     } else {
       let pollsCategory = null;
-      let pollChannel = null;
+      // let pollChannel = null;
 
       //check if category exists
       if (
@@ -49,19 +51,20 @@ client.on("message", (msg) => {
       } //polls category exists
       else {
         pollsCategory = msg.channel.guild.channels.cache.find(
-          (channel) => channel.name === "Polls"
+          (channel) => channel.name === "Polls" //make a refernece
         );
       }
 
       msg.guild.channels.create(split[2], { type: "text" }).then((pc) => {
         pc.setParent(pollsCategory.id);
-        pc.send(split[2]);
+        pc.send(`@everyone\n${split[2]}`);
         setTimeout(() => {
           pc.send(`@everyone ${split[1]} seconds have passed`);
         }, Number.parseInt(split[1]) * 1000);
       });
     }
   } catch (error) {
+    msg.channel.send("An error has occured. Try again.");
     console.error(error);
   }
 });
