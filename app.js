@@ -9,8 +9,11 @@ client.on("ready", () => {
 
 client.login(process.env.BOT_TOKEN);
 
-var guildID = 0;
-//res 785419755896307763
+function GetMax(object) {
+  return Object.keys(object).filter((x) => {
+    return object[x] == Math.max.apply(null, Object.values(object));
+  });
+}
 
 // const helpEmbed = new Discord.MessageEmbed()
 //   .setTitle("Syntax:")
@@ -18,7 +21,7 @@ var guildID = 0;
 //     "All arguments are prefixed with '-'. Example: !poll - {poll-duration-in-seconds} - {poll-question} - {first-poll-option}... - {last-poll-option}"
 //   );
 const helpText =
-  "**Syntax:**\nAll arguments are prefixed with '&$&'.\n**Example:**\n!poll &$& {poll-duration-in-seconds} &$& {poll-question} &$& {emoji} - {first-poll-option}... &$& {emoji} - {last-poll-option}\n**Example:**\nHow was your day?\n1. Good\n2. Bad\n";
+  "**Syntax:** \nAll arguments are prefixed with '&$&'. \n**Example:** \n!poll &$& {poll-duration-in-seconds} &$& {poll-question} &$& {emoji} - {first-poll-option}... &$& {emoji} - {last-poll-option} \n**Example:** \nHow was your day? \n1. Good \n2. Bad \n";
 
 client.on("message", (msg) => {
   if (msg.content === "!poll help") {
@@ -60,40 +63,67 @@ client.on("message", (msg) => {
       }
 
       msg.guild.channels.create(split[2], { type: "text" }).then((pc) => {
+        var emojiChoiceDict = {};
         let choices =
-          "\n" +
+          " \n" +
           split
             .slice(3)
             .map(function (item) {
-              return item + "\n";
+              var temp = item.split("-").map(function (item) {
+                return item.trim();
+              });
+              emojiChoiceDict[temp[0]] = 0;
+              //making dict for checking the results
+
+              return item + " \n";
             })
             .join("");
-        //gets all choices and adds \n so they can be in one message with the question and look nice
+        //gets all choices and adds  \n so they can be in one message with the question and look nice
 
         pc.setParent(pollsCategory.id);
         //put the channel in the category
 
-        pc.send("@everyone\n" + split[2] + choices).then((pollMsg) => {
+        //send poll
+        pc.send("@everyone \n" + split[2] + choices).then((pollMsg) => {
           const filter = (reaction, user) => {
             console.log(user.id);
             console.log(user.tag);
             console.log(reaction.emoji.name);
-            return reaction.emoji.name === "🐒";
+
+            return reaction.emoji.name in emojiChoiceDict;
+            // return reaction.emoji.name === "🐒";
           };
 
           const collector = pollMsg.createReactionCollector(filter, {
             time: Number.parseInt(split[1]) * 1000,
           });
 
-          collector.on("collect", (reaction, reactionCollector) => {
-            pc.send("monke");
+          collector.on("collect", (reaction, user) => {
+            emojiChoiceDict[reaction.emoji] += 1;
           });
 
           collector.on("end", (collected) => {
-            pc.send(`@everyone ${split[1]} seconds have passed`);
+            pc.send(
+              "@everyone \nThe poll has concluded and the results are in!"
+            );
+            let res = GetMax(emojiChoiceDict);
+            if (res.length === 1) {
+              //one result, just post it
+              pc.send(
+                `It appears the winner is ${res} -  with ${emojiChoiceDict[res]} vote(s)!`
+              );
+            } else {
+              //some kind of tie
+              pc.send(
+                `It appears there are multiple winners and they are ${res.map(
+                  (item) => {
+                    return item + "\n";
+                  }
+                )}`
+              );
+            }
           });
         });
-        //send poll
 
         // setTimeout(() => {
         //   pc.send(`@everyone ${split[1]} seconds have passed`);
