@@ -60,23 +60,44 @@ client.on("message", (msg) => {
       }
 
       msg.guild.channels.create(split[2], { type: "text" }).then((pc) => {
-        let choices = split
-          .slice(3)
-          .map(function (item) {
-            return item + "\n";
-          })
-          .join("");
+        let choices =
+          "\n" +
+          split
+            .slice(3)
+            .map(function (item) {
+              return item + "\n";
+            })
+            .join("");
         //gets all choices and adds \n so they can be in one message with the question and look nice
 
         pc.setParent(pollsCategory.id);
         //put the channel in the category
 
-        pc.send("@everyone\n" + split[2] + "\n" + choices);
+        pc.send("@everyone\n" + split[2] + choices).then((pollMsg) => {
+          const filter = (reaction, user) => {
+            console.log(user.id);
+            console.log(user.tag);
+            console.log(reaction.emoji.name);
+            return reaction.emoji.name === "🐒";
+          };
+
+          const collector = pollMsg.createReactionCollector(filter, {
+            time: Number.parseInt(split[1]) * 1000,
+          });
+
+          collector.on("collect", (reaction, reactionCollector) => {
+            pc.send("monke");
+          });
+
+          collector.on("end", (collected) => {
+            pc.send(`@everyone ${split[1]} seconds have passed`);
+          });
+        });
         //send poll
 
-        setTimeout(() => {
-          pc.send(`@everyone ${split[1]} seconds have passed`);
-        }, Number.parseInt(split[1]) * 1000); //wait seconds and post results
+        // setTimeout(() => {
+        //   pc.send(`@everyone ${split[1]} seconds have passed`);
+        // }, Number.parseInt(split[1]) * 1000); //wait seconds and post results
       });
     }
   } catch (error) {
