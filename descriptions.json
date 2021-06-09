@@ -1,0 +1,10 @@
+{
+  "help": {
+    "desc": "You need help? You can find it here!",
+    "usage": "Prints this"
+  },
+  "new": {
+    "desc": "Creates a new poll",
+    "usage": "|poll | new | {poll duration in seconds} | {poll question} | {first emoji - answer}... | {last emoji - answer}"
+  }
+}
