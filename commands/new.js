@@ -26,7 +26,7 @@ module.exports = {
   usage:
     "| {poll duration in seconds} | {poll question} | {first emoji - answer}... | {last emoji - answer}",
   description: "New poll command",
-  execute(message, args) {
+  execute(message, args, botUser) {
     // When someone uses the bot I'll see what they did for easier debugging
     console.log(
       `${message.author.tag} used the bot.\nDate: ${message.createdAt}.\nMessage: ${message.content}\n---------------`
@@ -38,6 +38,19 @@ module.exports = {
     ) {
       return message.channel.send(
         `You cannot use \$${this.name} here because you are lacking the permission to do so. ${message.author}`
+      );
+    }
+
+    if (isNaN(args[0])) {
+      return message.channel.send(
+        `The first argument MUST be the duration of the poll. ${message.author}`
+      );
+    }
+
+    console.log(args.length);
+    if (args.length < 4) {
+      return message.channel.send(
+        `You must provide at least 4 arguments. Please see |poll | help ${message.author}`
       );
     }
 
@@ -89,7 +102,7 @@ module.exports = {
           console.log(reaction.emoji.name);
 
           return (
-            reaction.emoji.name in emojiChoiceDict && reaction.me === false
+            reaction.emoji.name in emojiChoiceDict && user.id !== botUser.id
           );
         };
 

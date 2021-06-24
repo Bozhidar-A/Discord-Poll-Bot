@@ -6,6 +6,10 @@ require("dotenv").config();
 
 const client = new Client();
 
+client.login(process.env.BOT_TOKEN);
+
+var botUser = null; //var to store client.user
+
 client.commands = new Discord.Collection();
 
 // dynamically retrieves all command files
@@ -22,6 +26,7 @@ for (const file of commandFiles) {
 
 client.once("ready", () => {
   client.user.setActivity("|poll | help");
+  botUser = client.user;
   console.log("Bot is ready");
 });
 
@@ -73,11 +78,9 @@ client.on("message", (message) => {
   }
 
   try {
-    command.execute(message, args);
+    command.execute(message, args, botUser);
   } catch (error) {
     console.error(error);
     message.reply("An error accoured when trying to execute this command!");
   }
 });
-
-client.login(process.env.BOT_TOKEN);
