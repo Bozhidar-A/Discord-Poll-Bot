@@ -47,7 +47,6 @@ module.exports = {
       );
     }
 
-    console.log(args.length);
     if (args.length < 4) {
       return message.channel.send(
         `You must provide at least 4 arguments. Please see |poll | help ${message.author}`
@@ -70,10 +69,10 @@ module.exports = {
 
     //create new channel
     message.guild.channels.create(args[1], { type: "text" }).then((pch) => {
+      //state of the poll
       var emojiChoiceDict = {};
-      //current poll status
 
-      let choices =
+      var choices =
         " \n" +
         args
           .slice(2)
@@ -81,8 +80,8 @@ module.exports = {
             var temp = item.split("-").map(function (item) {
               return item.trim();
             });
+
             emojiChoiceDict[temp[0]] = 0;
-            //making dict for checking the results
 
             return item + " \n";
           })
@@ -91,9 +90,19 @@ module.exports = {
       pch.setParent(pollsCategory.id);
       //put the channel in the category
 
-      pch.send("@everyone \n" + args[1] + choices).then((pollMsg) => {
+      pch.send(args[1] + choices).then((pollMsg) => {
         //self react
-        SelfReactMsg(pollMsg, Object.keys(emojiChoiceDict));
+        try {
+          SelfReactMsg(pollMsg, Object.keys(emojiChoiceDict));
+        } catch (e) {
+          console.warn(e);
+          pch.delete();
+          return message.channel.send(
+            `One or many poll options were malformed. Stopping poll. Please see |poll | help ${message.author}`
+          );
+        }
+
+        pch.send("@everyone");
 
         //setting up collector and filter
         const filter = (reaction, user) => {
@@ -102,7 +111,8 @@ module.exports = {
           console.log(reaction.emoji.name);
 
           return (
-            reaction.emoji.name in emojiChoiceDict && user.id !== botUser.id
+            reaction.emoji.name in emojiChoiceDict &&
+            user.id !== botUser.user.id
           );
         };
 
@@ -134,7 +144,7 @@ module.exports = {
           if (res.length === 1) {
             //one result, just post it
             pch.send(
-              `It appears the winner is ${res} -  with ${emojiChoiceDict[res]} vote(s)!`
+              `It appears the winner is ${res} with ${emojiChoiceDict[res]} vote(s)!`
             );
           } else {
             //some kind of tie

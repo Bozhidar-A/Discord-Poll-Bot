@@ -26,7 +26,7 @@ for (const file of commandFiles) {
 
 client.once("ready", () => {
   client.user.setActivity("|poll | help");
-  botUser = client.user;
+  botUser = client;
   console.log("Bot is ready");
 });
 
