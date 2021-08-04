@@ -5,6 +5,6 @@
   },
   "new": {
     "desc": "Creates a new poll",
-    "usage": "|poll | new | {poll duration in seconds} | {poll question} | {first emoji - answer}... | {last emoji - answer}"
+    "usage": "|poll | new | {poll duration in seconds} | {poll question} | {first emoji - answer} ... | {last emoji - answer}"
   }
 }
