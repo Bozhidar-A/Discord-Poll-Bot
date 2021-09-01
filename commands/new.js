@@ -8,12 +8,6 @@ function PollsCategoryGetter(msg) {
   );
 }
 
-function SelfReactMsg(msg, emojis) {
-  emojis.forEach((element) => {
-    msg.react(element);
-  });
-}
-
 function GetMax(object) {
   return Object.keys(object).filter((x) => {
     return object[x] == Math.max.apply(null, Object.values(object));
@@ -92,15 +86,18 @@ module.exports = {
 
       pch.send(args[1] + choices).then((pollMsg) => {
         //self react
-        try {
-          SelfReactMsg(pollMsg, Object.keys(emojiChoiceDict));
-        } catch (e) {
-          console.warn(e);
-          pch.delete();
-          return message.channel.send(
-            `One or many poll options were malformed. Stopping poll. Please see |poll | help ${message.author}`
-          );
-        }
+        let pollOptionEmojis = Object.keys(emojiChoiceDict);
+
+        pollOptionEmojis.forEach((emoji) => {
+          pollMsg.react(emoji).catch((e) => {
+            console.log("ERROR");
+            console.log(e);
+            pch.delete();
+            return message.channel.send(
+              `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`
+            );
+          });
+        });
 
         pch.send("@everyone");
 
