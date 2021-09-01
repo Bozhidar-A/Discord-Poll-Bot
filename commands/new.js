@@ -109,9 +109,13 @@ module.exports = {
           console.log(user.id);
           console.log(user.tag);
           console.log(reaction.emoji.name);
+          console.log(reaction.emoji.id);
 
           return (
-            reaction.emoji.name in emojiChoiceDict &&
+            //check if its a normal emoji or a custom emoji and that the bot didn't react
+            (reaction.emoji.name in emojiChoiceDict ||
+              `<:${reaction.emoji.name}:${reaction.emoji.id}>` in
+                emojiChoiceDict) &&
             user.id !== botUser.user.id
           );
         };
@@ -151,7 +155,7 @@ module.exports = {
             pch.send(
               `It appears there are multiple winners and they are ${res.map(
                 (item) => {
-                  return item + "\n";
+                  return item + ", ";
                 }
               )}`
             );
