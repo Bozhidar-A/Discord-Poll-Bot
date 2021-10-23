@@ -2,6 +2,8 @@
 
 Allows you to create polls for your discord server!
 
+[Invite it by clicking here!](https://discord.com/api/oauth2/authorize?client_id=848256855297753100&permissions=533918592112&scope=bot)
+
 ## Syntax
 
 Get help with:
