@@ -99,6 +99,7 @@ module.exports = {
           });
         });
 
+        pch.send(`This poll will end in ${Number.parseInt(args[0])}`);
         pch.send("@everyone");
 
         //setting up collector and filter
