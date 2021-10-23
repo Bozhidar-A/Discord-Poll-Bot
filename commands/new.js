@@ -102,7 +102,7 @@ module.exports = {
           });
         });
 
-        pch.send(`This poll will end in ${Number.parseInt(args[0])} seconds`);
+        pch.send(`This poll will end in ${Number.parseInt(args[0])} seconds.`);
         pch.send("@everyone");
 
         //setting up collector and filter
