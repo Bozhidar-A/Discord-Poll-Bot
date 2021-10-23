@@ -61,26 +61,29 @@ module.exports = {
         });
     } //polls category doesn't exist. Create it
 
+    //state of the poll
+    var emojiChoiceDict = {};
+    var choices = " \n";
+
+    var options = args.slice(2);
+    for (var i = 0; i < options.length; i++) {
+      var temp = options[i].split("-").map(function (item) {
+        return item.trim();
+      });
+
+      if (temp[0] in emojiChoiceDict) {
+        return message.channel.send(
+          `Please don't provide the same emoji twice. ${message.author}`
+        );
+      } else {
+        emojiChoiceDict[temp[0]] = 0;
+
+        choices += options[i] + " \n";
+      }
+    }
+
     //create new channel
     message.guild.channels.create(args[1], { type: "text" }).then((pch) => {
-      //state of the poll
-      var emojiChoiceDict = {};
-
-      var choices =
-        " \n" +
-        args
-          .slice(2)
-          .map(function (item) {
-            var temp = item.split("-").map(function (item) {
-              return item.trim();
-            });
-
-            emojiChoiceDict[temp[0]] = 0;
-
-            return item + " \n";
-          })
-          .join("");
-
       pch.setParent(pollsCategory.id);
       //put the channel in the category
 
@@ -99,7 +102,7 @@ module.exports = {
           });
         });
 
-        pch.send(`This poll will end in ${Number.parseInt(args[0])}`);
+        pch.send(`This poll will end in ${Number.parseInt(args[0])} seconds`);
         pch.send("@everyone");
 
         //setting up collector and filter
