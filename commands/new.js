@@ -104,27 +104,6 @@ module.exports = {
         //put the channel in the category
 
         pch.send({ content: `${args[1] + choices}` }).then((pollMsg) => {
-          //self react
-          let pollOptionEmojis = Object.keys(emojiChoiceDict);
-
-          pollOptionEmojis.forEach((emoji) => {
-            pollMsg.react(emoji).catch((e) => {
-              console.log("ERROR");
-              console.log(e);
-              pch.delete();
-              return message.channel.send({
-                content: `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`,
-              });
-            });
-          });
-
-          pch.send({
-            content: `This poll will end in ${Number.parseInt(
-              args[0]
-            )} seconds.`,
-          });
-          pch.send({ content: "@everyone" });
-
           //setting up collector and filter
           const filter = (reaction, user) => {
             console.log(
@@ -146,6 +125,28 @@ module.exports = {
             dispose: true,
           });
 
+          //self react
+          let pollOptionEmojis = Object.keys(emojiChoiceDict);
+
+          pollOptionEmojis.forEach((emoji) => {
+            pollMsg.react(emoji).catch((e) => {
+              console.log("ERROR");
+              console.log(e);
+              pch.delete();
+              collector.stop("ERROR");
+              return message.channel.send({
+                content: `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`,
+              });
+            });
+          });
+
+          pch.send({
+            content: `This poll will end in ${Number.parseInt(
+              args[0]
+            )} seconds.`,
+          });
+          pch.send({ content: "@everyone" });
+
           collector.on("collect", (reaction, user) => {
             emojiChoiceDict[reaction.emoji] += 1;
 
@@ -166,14 +167,20 @@ module.exports = {
             );
           });
 
-          collector.on("end", () => {
+          collector.on("end", (collected, reason) => {
+            if (reason === "ERROR") {
+              return;
+            }
+
             pch.send({
               content:
                 "@everyone \nThe poll has concluded and the results are in!",
             });
+
             if (!Object.entries(emojiChoiceDict).some(([k, v]) => v > 0)) {
               //no one voted
               pch.send({ content: "No one appears to have voted..." });
+
               return;
             }
             let res = GetMax(emojiChoiceDict);
