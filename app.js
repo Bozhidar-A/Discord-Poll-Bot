@@ -4,7 +4,14 @@ const fs = require("fs");
 const prefix = "|poll";
 require("dotenv").config();
 
-const client = new Client();
+const myIntents = new Intents();
+myIntents.add(Intents.FLAGS.GUILDS);
+myIntents.add(Intents.FLAGS.GUILD_MESSAGES);
+myIntents.add(Intents.FLAGS.GUILD_MESSAGE_REACTIONS);
+
+const client = new Client({
+  intents: myIntents,
+});
 
 client.login(process.env.BOT_TOKEN);
 
@@ -30,7 +37,7 @@ client.once("ready", () => {
   console.log("Bot is ready");
 });
 
-client.on("message", (message) => {
+client.on("messageCreate", (message) => {
   // if the message doesn't start with the correct prefix ignore it
   if (!message.content.startsWith(prefix) || message.author.bot) return;
 
