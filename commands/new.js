@@ -47,6 +47,9 @@ module.exports = {
       );
     }
 
+    // console.log(message.guild.roles.everyone.id);
+    // return;
+
     var pollsCategory = PollsCategoryGetter(message);
     //gets polls category
     //if not found pollsCategory will be undefined
@@ -55,6 +58,12 @@ module.exports = {
       message.guild.channels
         .create("Polls", {
           type: "category",
+          permissionOverwrites: [
+            {
+              id: message.guild.roles.everyone.id,
+              deny: ["SEND_MESSAGES", "ADD_REACTIONS"],
+            },
+          ],
         })
         .then((pc) => {
           pollsCategory = pc;
@@ -83,86 +92,98 @@ module.exports = {
     }
 
     //create new channel
-    message.guild.channels.create(args[1], { type: "text" }).then((pch) => {
-      pch.setParent(pollsCategory.id);
-      //put the channel in the category
+    message.guild.channels
+      .create(args[1], {
+        type: "text",
+        permissionOverwrites: [
+          {
+            id: message.guild.roles.everyone.id,
+            deny: ["SEND_MESSAGES", "ADD_REACTIONS"],
+          },
+        ],
+      })
+      .then((pch) => {
+        pch.setParent(pollsCategory.id);
+        //put the channel in the category
 
-      pch.send(args[1] + choices).then((pollMsg) => {
-        //self react
-        let pollOptionEmojis = Object.keys(emojiChoiceDict);
+        pch.send(args[1] + choices).then((pollMsg) => {
+          //self react
+          let pollOptionEmojis = Object.keys(emojiChoiceDict);
 
-        pollOptionEmojis.forEach((emoji) => {
-          pollMsg.react(emoji).catch((e) => {
-            console.log("ERROR");
-            console.log(e);
-            pch.delete();
-            return message.channel.send(
-              `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`
+          pollOptionEmojis.forEach((emoji) => {
+            pollMsg.react(emoji).catch((e) => {
+              console.log("ERROR");
+              console.log(e);
+              pch.delete();
+              return message.channel.send(
+                `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`
+              );
+            });
+          });
+
+          pch.send(
+            `This poll will end in ${Number.parseInt(args[0])} seconds.`
+          );
+          pch.send("@everyone");
+
+          //setting up collector and filter
+          const filter = (reaction, user) => {
+            console.log(user.id);
+            console.log(user.tag);
+            console.log(reaction.emoji.name);
+            console.log(reaction.emoji.id);
+
+            return (
+              //check if its a normal emoji or a custom emoji and that the bot didn't react
+              (reaction.emoji.name in emojiChoiceDict ||
+                `<:${reaction.emoji.name}:${reaction.emoji.id}>` in
+                  emojiChoiceDict) &&
+              user.id !== botUser.user.id
             );
+          };
+
+          const collector = pollMsg.createReactionCollector(filter, {
+            time: Number.parseInt(args[0]) * 1000,
+            dispose: true,
+          });
+
+          collector.on("collect", (reaction, user) => {
+            console.log("added react");
+            emojiChoiceDict[reaction.emoji] += 1;
+          });
+
+          collector.on("remove", (reaction, user) => {
+            console.log("removed react");
+            emojiChoiceDict[reaction.emoji] -= 1;
+          });
+
+          collector.on("end", () => {
+            pch.send(
+              "@everyone \nThe poll has concluded and the results are in!"
+            );
+            if (!Object.entries(emojiChoiceDict).some(([k, v]) => v > 0)) {
+              //no one voted
+              pch.send("No one appears to have voted...");
+              return;
+            }
+            let res = GetMax(emojiChoiceDict);
+            if (res.length === 1) {
+              //one result, just post it
+              pch.send(
+                `It appears the winner is ${res} with ${emojiChoiceDict[res]} vote(s)!`
+              );
+            } else {
+              //some kind of tie
+              pch.send(
+                `It appears there are multiple winners and they are ${res.map(
+                  (item) => {
+                    return item + ", ";
+                  }
+                )}`
+              );
+            }
           });
         });
-
-        pch.send(`This poll will end in ${Number.parseInt(args[0])} seconds.`);
-        pch.send("@everyone");
-
-        //setting up collector and filter
-        const filter = (reaction, user) => {
-          console.log(user.id);
-          console.log(user.tag);
-          console.log(reaction.emoji.name);
-          console.log(reaction.emoji.id);
-
-          return (
-            //check if its a normal emoji or a custom emoji and that the bot didn't react
-            (reaction.emoji.name in emojiChoiceDict ||
-              `<:${reaction.emoji.name}:${reaction.emoji.id}>` in
-                emojiChoiceDict) &&
-            user.id !== botUser.user.id
-          );
-        };
-
-        const collector = pollMsg.createReactionCollector(filter, {
-          time: Number.parseInt(args[0]) * 1000,
-          dispose: true,
-        });
-
-        collector.on("collect", (reaction, user) => {
-          console.log("added react");
-          emojiChoiceDict[reaction.emoji] += 1;
-        });
-
-        collector.on("remove", (reaction, user) => {
-          console.log("removed react");
-          emojiChoiceDict[reaction.emoji] -= 1;
-        });
-
-        collector.on("end", () => {
-          pch.send(
-            "@everyone \nThe poll has concluded and the results are in!"
-          );
-          if (!Object.entries(emojiChoiceDict).some(([k, v]) => v > 0)) {
-            //no one voted
-            pch.send("No one appears to have voted...");
-            return;
-          }
-          let res = GetMax(emojiChoiceDict);
-          if (res.length === 1) {
-            //one result, just post it
-            pch.send(
-              `It appears the winner is ${res} with ${emojiChoiceDict[res]} vote(s)!`
-            );
-          } else {
-            //some kind of tie
-            pch.send(
-              `It appears there are multiple winners and they are ${res.map(
-                (item) => {
-                  return item + ", ";
-                }
-              )}`
-            );
-          }
-        });
       });
-    });
   },
 };
