@@ -54,7 +54,7 @@ module.exports = {
     if (pollsCategory === undefined) {
       message.guild.channels
         .create("Polls", {
-          type: "category",
+          type: "GUILD_CATEGORY",
           permissionOverwrites: [
             {
               id: message.guild.roles.everyone.id,
@@ -64,6 +64,9 @@ module.exports = {
         })
         .then((pc) => {
           pollsCategory = pc;
+        })
+        .catch((e) => {
+          console.log(e);
         });
     } //polls category doesn't exist. Create it
 
