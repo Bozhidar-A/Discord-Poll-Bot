@@ -20,11 +20,11 @@ module.exports = {
         embed.addField(i, helpDescriptions[i].desc, false);
         embed.addField(`${i} usage`, helpDescriptions[i].usage, false);
       });
-      message.channel.send(embed);
+      message.channel.send({ embeds: [embed] });
     } else {
-      message.channel.send(
-        `${message.author} You most likely spelled the command wrong. Please check your spelling.`
-      );
+      message.channel.send({
+        content: `${message.author} You most likely spelled the command wrong. Please check your spelling.`,
+      });
     }
   },
 };

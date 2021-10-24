@@ -27,24 +27,24 @@ module.exports = {
     );
 
     if (
-      !message.member.hasPermission("MENTION_EVERYONE") ||
-      !message.member.hasPermission("ADMINISTRATOR")
+      !message.member.permissions.has("MENTION_EVERYONE") ||
+      !message.member.permissions.has("ADMINISTRATOR")
     ) {
-      return message.channel.send(
-        `You cannot use \$${this.name} here because you are lacking the permission to do so. ${message.author}`
-      );
+      return message.channel.send({
+        content: `You cannot use \$${this.name} here because you are lacking the permission to do so. ${message.author}`,
+      });
     }
 
     if (isNaN(args[0])) {
-      return message.channel.send(
-        `The first argument MUST be the duration of the poll. ${message.author}`
-      );
+      return message.channel.send({
+        content: `The first argument MUST be the duration of the poll. ${message.author}`,
+      });
     }
 
     if (args.length < 4) {
-      return message.channel.send(
-        `You must provide at least 4 arguments. Please see |poll | help ${message.author}`
-      );
+      return message.channel.send({
+        content: `You must provide at least 4 arguments. Please see |poll | help ${message.author}`,
+      });
     }
 
     // console.log(message.guild.roles.everyone.id);
@@ -81,9 +81,9 @@ module.exports = {
       });
 
       if (temp[0] in emojiChoiceDict) {
-        return message.channel.send(
-          `Please don't provide the same emoji twice. ${message.author}`
-        );
+        return message.channel.send({
+          content: `Please don't provide the same emoji twice. ${message.author}`,
+        });
       } else {
         emojiChoiceDict[temp[0]] = 0;
 
@@ -106,7 +106,7 @@ module.exports = {
         pch.setParent(pollsCategory.id);
         //put the channel in the category
 
-        pch.send(args[1] + choices).then((pollMsg) => {
+        pch.send({ content: `${args[1] + choices}` }).then((pollMsg) => {
           //self react
           let pollOptionEmojis = Object.keys(emojiChoiceDict);
 
@@ -115,16 +115,18 @@ module.exports = {
               console.log("ERROR");
               console.log(e);
               pch.delete();
-              return message.channel.send(
-                `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`
-              );
+              return message.channel.send({
+                content: `One or many poll options were malformed. Stopping poll. ${message.author} Please see |poll | help`,
+              });
             });
           });
 
-          pch.send(
-            `This poll will end in ${Number.parseInt(args[0])} seconds.`
-          );
-          pch.send("@everyone");
+          pch.send({
+            content: `This poll will end in ${Number.parseInt(
+              args[0]
+            )} seconds.`,
+          });
+          pch.send({ content: "@everyone" });
 
           //setting up collector and filter
           const filter = (reaction, user) => {
@@ -142,7 +144,8 @@ module.exports = {
             );
           };
 
-          const collector = pollMsg.createReactionCollector(filter, {
+          const collector = pollMsg.createReactionCollector({
+            filter,
             time: Number.parseInt(args[0]) * 1000,
             dispose: true,
           });
@@ -158,29 +161,30 @@ module.exports = {
           });
 
           collector.on("end", () => {
-            pch.send(
-              "@everyone \nThe poll has concluded and the results are in!"
-            );
+            pch.send({
+              content:
+                "@everyone \nThe poll has concluded and the results are in!",
+            });
             if (!Object.entries(emojiChoiceDict).some(([k, v]) => v > 0)) {
               //no one voted
-              pch.send("No one appears to have voted...");
+              pch.send({ content: "No one appears to have voted..." });
               return;
             }
             let res = GetMax(emojiChoiceDict);
             if (res.length === 1) {
               //one result, just post it
-              pch.send(
-                `It appears the winner is ${res} with ${emojiChoiceDict[res]} vote(s)!`
-              );
+              pch.send({
+                content: `It appears the winner is ${res} with ${emojiChoiceDict[res]} vote(s)!`,
+              });
             } else {
               //some kind of tie
-              pch.send(
-                `It appears there are multiple winners and they are ${res.map(
+              pch.send({
+                content: `It appears there are multiple winners and they are ${res.map(
                   (item) => {
                     return item + ", ";
                   }
-                )}`
-              );
+                )}`,
+              });
             }
           });
         });
