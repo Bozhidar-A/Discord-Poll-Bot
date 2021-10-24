@@ -20,17 +20,11 @@ module.exports = {
         embed.addField(i, helpDescriptions[i].desc, false);
         embed.addField(`${i} usage`, helpDescriptions[i].usage, false);
       });
-
-      embed.addField(
-        "Check out the source code!",
-        "[You can find it here!](https://github.com/Bozhidar-A/Discord-Poll-Bot)"
-      );
-
-      message.channel.send({ embeds: [embed] });
+      message.channel.send(embed);
     } else {
-      message.channel.send({
-        content: `${message.author} You most likely spelled the command wrong. Please check your spelling.`,
-      });
+      message.channel.send(
+        `${message.author} You most likely spelled the command wrong. Please check your spelling.`
+      );
     }
   },
 };
