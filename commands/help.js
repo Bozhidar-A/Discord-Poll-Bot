@@ -20,6 +20,12 @@ module.exports = {
         embed.addField(i, helpDescriptions[i].desc, false);
         embed.addField(`${i} usage`, helpDescriptions[i].usage, false);
       });
+
+      embed.addField(
+        "Check out the source code!",
+        "[You can find it here!](https://github.com/Bozhidar-A/Discord-Poll-Bot)"
+      );
+
       message.channel.send({ embeds: [embed] });
     } else {
       message.channel.send({

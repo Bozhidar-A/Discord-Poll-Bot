@@ -47,9 +47,6 @@ module.exports = {
       });
     }
 
-    // console.log(message.guild.roles.everyone.id);
-    // return;
-
     var pollsCategory = PollsCategoryGetter(message);
     //gets polls category
     //if not found pollsCategory will be undefined
@@ -130,10 +127,9 @@ module.exports = {
 
           //setting up collector and filter
           const filter = (reaction, user) => {
-            console.log(user.id);
-            console.log(user.tag);
-            console.log(reaction.emoji.name);
-            console.log(reaction.emoji.id);
+            console.log(
+              `${user.tag}(${user.id}) added ${reaction.emoji.name} (id - ${reaction.emoji.id})`
+            );
 
             return (
               //check if its a normal emoji or a custom emoji and that the bot didn't react
@@ -151,13 +147,23 @@ module.exports = {
           });
 
           collector.on("collect", (reaction, user) => {
-            console.log("added react");
             emojiChoiceDict[reaction.emoji] += 1;
+
+            console.log(
+              `${user.tag} (${user.id}) added react ${
+                reaction.emoji
+              }.\nState of poll - ${JSON.stringify(emojiChoiceDict)}`
+            );
           });
 
           collector.on("remove", (reaction, user) => {
-            console.log("removed react");
             emojiChoiceDict[reaction.emoji] -= 1;
+
+            console.log(
+              `${user.tag} (${user.id}) removed react ${
+                reaction.emoji
+              }.\nState of poll - ${JSON.stringify(emojiChoiceDict)}`
+            );
           });
 
           collector.on("end", () => {
