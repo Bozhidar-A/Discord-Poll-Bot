@@ -18,23 +18,74 @@ client.login(process.env.BOT_TOKEN);
 var botUser = null; //var to store client.user
 
 client.commands = new Discord.Collection();
+client.slashCommands = new Discord.Collection();
 
 // dynamically retrieves all command files
+const commands = [];
+const slashCommands = [];
+
 const commandFiles = fs
   .readdirSync("./commands")
   .filter((file) => file.endsWith(".js"));
+
 for (const file of commandFiles) {
   const command = require(`./commands/${file}`);
+
+  if (!command.name) return;
+
+  commands.push(command);
 
   // set a new item in the Collection
   // with the key as the command name and the value as the exported module
   client.commands.set(command.name, command);
 }
 
-client.once("ready", () => {
+const slashCommandFiles = fs
+  .readdirSync("./commands/slash")
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of slashCommandFiles) {
+  const command = require(`./commands/slash/${file}`);
+
+  if (!command.name) return;
+
+  slashCommands.push(command);
+
+  // set a new item in the Collection
+  // with the key as the command name and the value as the exported module
+  client.slashCommands.set(command.name, command);
+}
+
+client.once("ready", async () => {
   client.user.setActivity("|poll | help");
   botUser = client;
   console.log("Bot is ready");
+
+  const testGuild = process.env.testGuild;
+  // const clientID = client.user.id;
+
+  await client.guilds.cache
+    .get(testGuild)
+    .commands.set(slashCommands)
+    .then(() => console.log("slash for debug ready"));
+
+  // Register for all the guilds the bot is in
+  // await client.application.commands.set(arrayOfSlashCommands);
+});
+
+client.on("interactionCreate", async (interaction) => {
+  if (!interaction.isCommand()) return;
+  const command = client.slashCommands.get(interaction.commandName);
+  if (!command) return;
+  try {
+    await command.run(client, interaction, interaction.options);
+  } catch (error) {
+    if (error) console.error(error);
+    await interaction.reply({
+      content: "There was an error while executing this command!",
+      ephemeral: true,
+    });
+  }
 });
 
 client.on("messageCreate", (message) => {
