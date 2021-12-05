@@ -1,24 +1,30 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
-function TextBuilder(pollOptions, pollStatus) {
-  let tmp = "";
+function TextBuilder(pollOptions, pollStatus, question) {
+  let tmp = `${question}\n`;
   for (let i = 0; i < pollOptions.length; i++) {
     tmp += `${++i}. - ${pollOptions[--i]} (${pollStatus[i]} votes)\n`;
   }
   return tmp;
 }
 
+function GetMax(object) {
+  return Object.keys(object).filter((x) => {
+    return object[x] == Math.max.apply(null, Object.values(object));
+  });
+}
+
 module.exports = {
   name: "poll_new",
   description: "Deletes all poll channels",
   options: [
-    // {
-    //   name: "lenght",
-    //   description: "For how long the poll will go on in seconds",
-    //   required: true,
-    //   type: Discord.Constants.ApplicationCommandOptionTypes.INTEGER,
-    // },
+    {
+      name: "length",
+      description: "For how long the poll will go on in seconds",
+      required: true,
+      type: Discord.Constants.ApplicationCommandOptionTypes.INTEGER,
+    },
     {
       name: "question",
       description: "The question",
@@ -34,7 +40,9 @@ module.exports = {
     },
   ],
   run: async (client, interaction, args) => {
-    await interaction.deferReply({ ephemeral: false }).catch(() => {});
+    await interaction
+      .reply({ content: "The poll is live!", ephemeral: true })
+      .catch(() => {});
 
     const permissions = ["MENTION_EVERYONE", "ADMINISTRATOR"];
     const authorPerms = interaction.channel.permissionsFor(interaction.member);
@@ -47,10 +55,6 @@ module.exports = {
           });
         }
       });
-
-      //   return interaction.editReply({
-      //     content: "Working on it",
-      //   });
     }
 
     //can use the command
@@ -86,8 +90,8 @@ module.exports = {
 
     var pollOptions = interaction.options.getString("all_options").split("|");
     var pollStatus = {};
-    for (let i = 0; i < pollOptions.length; ) {
-      pollStatus[++i] = 0;
+    for (let i = 0; i < pollOptions.length; i++) {
+      pollStatus[i] = 0;
     }
 
     interaction.member.guild.channels
@@ -103,36 +107,24 @@ module.exports = {
       .then((pch) => {
         pch.setParent(pollsCategory.id);
 
-        // let button = new Discord.MessageButton()
-        //   .setStyle("PRIMARY")
-        //   .setCustomId("1")
-        //   .setLabel("1");
-
         var row = new Discord.MessageActionRow();
-        var optionsMsg = "";
-        var bruh = "bruh";
-        //.addComponents(button);
 
         for (let i = 0; i < pollOptions.length; ) {
-          optionsMsg += pollOptions[i] + "\n";
-          i++;
           row.addComponents(
             new Discord.MessageButton()
               .setStyle("PRIMARY")
               .setCustomId(`${i}`)
-              .setLabel(`${i}`)
+              .setLabel(`${++i}`) //visual +1
           );
         }
 
-        // for (let i = 0; i < pollOptions.length; ) {
-        //   optionsMsg += `${++i}. - ${pollOptions[--i]} (${
-        //     pollStatus[i]
-        //   } votes)\n`;
-        // }
-
         pch
           .send({
-            content: `${interaction.options.getString("question")}\n${bruh}`,
+            content: `${TextBuilder(
+              pollOptions,
+              pollStatus,
+              interaction.options.getString("question")
+            )}`,
             components: [row],
           })
           .then((msg) => {
@@ -141,11 +133,10 @@ module.exports = {
             const filter = (button) => true; //???
             const collector = msg.channel.createMessageComponentCollector({
               filter,
-              time: 15000,
+              time: interaction.options.getInteger("length") * 1000,
             });
 
             collector.on("collect", async (e) => {
-              // e.deferUpdate();
               if (votedUsers.includes(e.user.id)) {
                 e.reply({
                   content: "Sorry but you can vote only once",
@@ -154,32 +145,62 @@ module.exports = {
               } else {
                 votedUsers.push(e.user.id);
                 pollStatus[e.customId] += 1;
-                // optionsMsg = "";
-                // for (let i = 0; i < pollOptions.length; ) {
-                //   optionsMsg += `${++i}. - ${pollOptions[--i]} (${
-                //     pollStatus[i]
-                //   } votes)\n`;
-                // }
-                msg.edit({ content: `${bruh}`, components: [row] });
+                msg.edit({
+                  content: `${TextBuilder(
+                    pollOptions,
+                    pollStatus,
+                    interaction.options.getString("question")
+                  )}`,
+                  components: [row],
+                });
                 e.reply({ content: "Thanks for your vote!", ephemeral: true });
               }
-
-              // msg.edit("bruh");
             });
 
             collector.on("end", (collected) => {
-              console.log(collected);
               console.log(pollStatus);
               //disable buttons
               row.components.map((com) => com.setDisabled(true));
               msg.edit({
                 content: `${interaction.options.getString(
                   "question"
-                )}\n${bruh}`,
+                )}\nThe poll is closed!`,
                 components: [row],
               });
 
+              pch.send({
+                content: `@everyone\nThe poll has concluded and the final rankings are:\n${TextBuilder(
+                  pollOptions,
+                  pollStatus,
+                  interaction.options.getString("question")
+                )}`,
+              });
+
               //count votes
+              if (!Object.entries(pollStatus).some(([k, v]) => v > 0)) {
+                //no one voted
+                pch.send({ content: "No one appears to have voted..." });
+
+                return;
+              }
+              let res = GetMax(pollStatus);
+              if (res.length === 1) {
+                //one result, just post it
+                pch.send({
+                  content: `It appears the winner is option ${
+                    parseInt(res) + 1
+                  } with ${pollStatus[res]} vote(s)!`,
+                });
+              } else {
+                //some kind of tie
+                pch.send({
+                  content: `It appears there are multiple winners and they are ${res.map(
+                    (item, i) => {
+                      return `${i} - ${item}, `;
+                    }
+                  )}`,
+                });
+              }
             });
           });
       });
