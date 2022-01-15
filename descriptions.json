@@ -6,5 +6,21 @@
   "new": {
     "desc": "Creates a new poll",
     "usage": "|poll | new | {poll duration in seconds} | {poll question} | {first emoji - answer} ... | {last emoji - answer}"
+  },
+  "/poll_help": {
+    "desc": "You need help? You can find it here!",
+    "usage": "Prints this"
+  },
+  "/poll_new": {
+    "desc": "Creates a new poll",
+    "usage": "/poll_new length: {poll duration in seconds} question: {poll question} all_options: {first option | ... | last option}"
+  },
+  "/poll_delete_channel": {
+    "desc": "Deletes a specific poll channel",
+    "usage": "/poll_delete_channel {ID of channel to delete}"
+  },
+  "/poll_nuke": {
+    "desc": "Deletes all poll channels",
+    "usage": "/poll_nuke"
   }
 }
