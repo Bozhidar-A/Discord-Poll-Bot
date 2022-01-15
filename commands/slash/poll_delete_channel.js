@@ -1,4 +1,3 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
 module.exports = {
@@ -14,11 +13,15 @@ module.exports = {
     },
   ],
   run: async (client, interaction, args) => {
-    let { commandName, options } = interaction;
+    let { options } = interaction;
 
     let pollChannel = interaction.guild.channels.cache.find(
-      (category) => category.id === options.getString("pChannelID")
+      (channel) =>
+        channel.id === options.getString("the_id") &&
+        channel.parent.name === "Polls" //to prevent this bot being used to delete other channels
     );
+
+    console.log(pollChannel.parent);
 
     pollChannel.delete();
 

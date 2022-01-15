@@ -6,7 +6,7 @@ module.exports = {
   description: "Deletes all poll channels",
   run: async (client, interaction, args) => {
     let pollCategory = interaction.guild.channels.cache.find(
-      (channel) => cahnnel.id === "Polls"
+      (channel) => channel.name === "Polls"
     );
 
     Promise.all(

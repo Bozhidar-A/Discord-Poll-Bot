@@ -81,10 +81,17 @@ client.on("interactionCreate", async (interaction) => {
     await command.run(client, interaction, interaction.options);
   } catch (error) {
     if (error) console.error(error);
-    await interaction.reply({
-      content: "There was an error while executing this command!",
-      ephemeral: true,
-    });
+    try {
+      await interaction.reply({
+        content: "There was an error while executing this command!",
+        ephemeral: true,
+      });
+    } catch (error) {
+      console.error(error);
+      interaction.channel.send(
+        "There was a big error while executing this command!"
+      );
+    }
   }
 });
 

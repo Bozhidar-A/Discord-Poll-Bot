@@ -1,4 +1,3 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
 const Discord = require("discord.js");
 
 function TextBuilder(pollOptions, pollStatus, question) {
@@ -6,6 +5,9 @@ function TextBuilder(pollOptions, pollStatus, question) {
   for (let i = 0; i < pollOptions.length; i++) {
     tmp += `${++i}. - ${pollOptions[--i]} (${pollStatus[i]} votes)\n`;
   }
+
+  tmp += "WARNING: You can vote only once!\n";
+
   return tmp;
 }
 
@@ -61,7 +63,7 @@ module.exports = {
 
     function PollsCategoryGetter(msg) {
       return msg.member.guild.channels.cache.find(
-        (channel) => channel.name === "Polls"
+        (channel) => channel.name === "Polls" //case sensitive!
       );
     }
 
@@ -75,7 +77,7 @@ module.exports = {
           type: "GUILD_CATEGORY",
           permissionOverwrites: [
             {
-              id: message.guild.roles.everyone.id,
+              id: interaction.guild.roles.everyone.id,
               deny: ["SEND_MESSAGES", "ADD_REACTIONS"],
             },
           ],
